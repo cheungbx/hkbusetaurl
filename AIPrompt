@@ -1,0 +1,81 @@
+This prompt have been used successfullyh on Gemini with Canvas to produce this tool.
+
+HK Bus ETA API url generator
+Create a web tool called “HK Bus ETA API url generator” that provides an input window that  take free form input of the following format:
+e.g.
+bus_company_id   route   direction   stop_name
+KMB   234A   荃灣   海韻花園
+KMB   234B   荃灣   海韻花園
+KMB   234C   觀塘   海韻花園
+KMB   234D   觀塘   海韻花園
+KMB   261B   九龍站   海韻花園
+KMB   48P   火炭   海韻花園
+KMB   52P  旺角  海韻花園
+KMB   53   荃灣   海韻花園
+GMB   96C   荃灣   碧堤半島
+KMB   52X   旺角   海韻花園
+CTB   952   銅鑼灣 海韻花園
+KMB   A38   機場   深井深慈街
+GMB   308M   青衣站   海韻花園
+KMB   52X   屯門   碧堤半島
+KMB   53   元朗   碧堤半島
+CTB   952   屯門   碧堤半島
+
+Apply basic validation:
+Bus_company_id  must be KMB CTB or GMB.
+Then followed by 3 words separated by space (for values of route, direction, stop_name). Only Alphanumeric and Chinese Characters are allowed.
+All lowercase input will be converted to upper case before further processing.
+
+For each input line, based on the bus_company_id and route use  the  HK government bus eta API to find the stop ids with directions and  stop names beginning with the same characters as the direction and  stop_name provided by the input above.
+
+Output the following input by user (bus_company_id   route   direction   stop_name). On the same line, append the url of the API that can be used by the user to retrieve the eta.
+At the top of the output window, show a copy button to allow the output text to be copied to the clipboard.
+Provide a window to allow each url for API to be tested.
+
+Sample output (each on exactly one line, do not break into 2 lines):
+KMB 234A 荃灣 海韻花園https://data.etabus.gov.hk/v1/transport/kmb/eta/ED9E5ACF98190E5C/234A/1
+
+KMB 234B 荃灣 海韻花園
+https://data.etabus.gov.hk/v1/transport/kmb/eta/ED9E5ACF98190E5C/234B/1
+
+KMB 234C 觀塘 海韻花園
+https://data.etabus.gov.hk/v1/transport/kmb/eta/ED9E5ACF98190E5C/234C/1
+
+KMB 234D 觀塘 海韻花園
+https://data.etabus.gov.hk/v1/transport/kmb/eta/ED9E5ACF98190E5C/234D/1
+
+KMB 261B 九龍站 海韻花園
+https://data.etabus.gov.hk/v1/transport/kmb/eta/ED9E5ACF98190E5C/261B/1
+
+KMB 48P 火炭 海韻花園
+https://data.etabus.gov.hk/v1/transport/kmb/eta/ED9E5ACF98190E5C/48P/1
+
+KMB 52P 旺角 海韻花園
+https://data.etabus.gov.hk/v1/transport/kmb/eta/ED9E5ACF98190E5C/52P/1
+
+KMB 53 荃灣 海韻花園
+https://data.etabus.gov.hk/v1/transport/kmb/eta/ED9E5ACF98190E5C/53/1
+
+GMB 96C 荃灣 碧堤半島
+https://data.etagmb.gov.hk/eta/route-stop/2008093/2/1
+
+KMB 52X 旺角 海韻花園
+https://data.etabus.gov.hk/v1/transport/kmb/eta/ED9E5ACF98190E5C/52X/1
+
+CTB 952 銅鑼灣 海韻花園
+https://rt.data.gov.hk/v2/transport/citybus/eta/ctb/002618/952
+
+KMB A38 機場 深井深慈街
+https://data.etabus.gov.hk/v1/transport/kmb/eta/5A2A66038B409879/A38/1
+
+GMB 308M 青衣站 海韻花園
+https://data.etagmb.gov.hk/route/NT/308M
+
+KMB 52X 屯門 碧堤半島
+https://data.etabus.gov.hk/v1/transport/kmb/eta/B47C12A965D7B481/52X/1
+
+KMB 53 元朗 碧堤半島
+https://data.etabus.gov.hk/v1/transport/kmb/eta/B47C12A965D7B481/53/1
+
+CTB 952 屯門 碧堤半島
+https://rt.data.gov.hk/v2/transport/citybus/eta/ctb/002619/952
