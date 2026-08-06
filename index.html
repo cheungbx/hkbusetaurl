@@ -1057,8 +1057,10 @@ CTB 952 屯門 碧堤半島`;
                     const list = Array.isArray(json.data) ? json.data : [json.data];
                     list.forEach(item => {
                         // ONLY add items that have a non-null, valid ETA
-                        if (item.diff) {
-                            const diffMins = item.diff;
+                       if (item.timestamp) {
+                            const etaTime = new Date(item.timestamp);
+                            const now = new Date();
+                            const diffMins = Math.round((etaTime - now) / 60000);
                             
                             // Only include if it's a valid future/near-future time
                             etaItems.push({
