@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HK Bus & GMB ETA url Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        kmb: '#E11D48',
+                        ctb: '#D97706',
+                        gmb: '#059669',
+                        darkbg: '#0F172A',
+                        darkcard: '#1E293B',
+                        darkborder: '#334155'
+                    }
+                }
+            }
+        };
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(107, 114, 128, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkbg text-slate-800 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-darkcard border-b border-slate-200 dark:border-darkborder sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 via-amber-500 to-emerald-500 flex items-center justify-center text-white font-bold shadow-md">
+                    <i class="fa-solid font-bold text-lg fa-bus"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg sm:text-xl text-slate-900 dark:text-white flex items-center gap-2">
+                        HK Bus ETA API url Generator v1.3
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-mono font-medium">Open Data</span>
+                    </h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Match KMB, CTB & GMB stops and retrieve official ETA API endpoints</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <!-- Theme Toggle Button -->
+                <button id="themeToggleBtn" onclick="toggleDarkMode()" class="p-2.5 rounded-lg border border-slate-200 dark:border-darkborder text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Toggle Theme">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block"></i>
+                </button>
+                <a href="https://data.gov.hk" target="_blank" rel="noopener noreferrer" class="hidden md:flex items-center text-xs font-medium px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                    <i class="fa-solid fa-external-link text-xs mr-1.5"></i> DATA.GOV.HK
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+
+        <!-- Top Quick Controls / Information Bar -->
+        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    <i class="fa-solid fa-circle-info text-blue-500"></i> Input Format Requirement
+                </div>
+                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Lines must contain 4 space/tab separated values: <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-rose-600 dark:text-rose-400 font-mono">bus_company_id  route  direction  stop_name</code>.<br>
+                    Allowed companies: <span class="font-semibold text-rose-600">KMB</span>, <span class="font-semibold text-amber-600">CTB</span>, <span class="font-semibold text-emerald-600">GMB</span>. Lowercase inputs are converted to uppercase automatically.
+                </p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <button onclick="loadSampleData()" class="flex-1 md:flex-none inline-flex items-center justify-center px-3.5 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-sm">
+                    <i class="fa-solid fa-flask text-indigo-500 mr-2"></i> Load Sample Data
+                </button>
+                <button onclick="clearInput()" class="inline-flex items-center justify-center px-3.5 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-sm">
+                    <i class="fa-solid fa-trash-can text-slate-400 mr-2"></i> Clear
+                </button>
+                <button id="processBtn" onclick="startBatchProcessing()" class="flex-1 md:flex-none inline-flex items-center justify-center px-5 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 active:scale-95 text-white transition-all shadow-md shadow-blue-500/20">
+                    <i class="fa-solid fa-play mr-2"></i> Process API Endpoints
+                </button>
+            </div>
+        </div>
+
+        <!-- Two Panel Grid: Left Input Window, Right Output Window -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+            <!-- Left Panel: Input Window -->
+            <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-2xl shadow-sm flex flex-col h-[580px] overflow-hidden">
+                <!-- Panel Header -->
+                <div class="px-5 py-3.5 border-b border-slate-200 dark:border-darkborder bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-file-pen text-slate-500 dark:text-slate-400"></i>
+                        <span class="font-semibold text-sm text-slate-800 dark:text-slate-200">Input Window</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400">
+                        <span id="lineCounter" class="font-mono bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">0 lines</span>
+                        <span id="validationSummary" class="hidden sm:inline-block font-medium">Validation: Idle</span>
+                    </div>
+                </div>
+
+                <!-- Textarea Editor with Line Numbers -->
+                <div class="flex-1 relative flex bg-white dark:bg-slate-900 font-mono text-xs sm:text-sm overflow-hidden">
+                    <!-- Line Numbers Column -->
+                    <div id="lineNumbers" class="w-10 py-3 bg-slate-100 dark:bg-slate-950 text-slate-400 dark:text-slate-600 text-right pr-2 select-none border-r border-slate-200 dark:border-slate-800 font-mono text-xs leading-6 overflow-hidden">
+                        1
+                    </div>
+                    <!-- Monospaced Input Textarea -->
+                    <textarea id="inputTextarea" spellcheck="false" oninput="handleInputTextChange()" onscroll="syncScroll()" placeholder="Enter lines in format:
+KMB 234A 荃灣 海韻花園
+CTB 952 銅鑼灣 海韻花園
+GMB 96C 荃灣 碧堤半島..." 
+                    class="flex-1 p-3 bg-transparent text-slate-800 dark:text-slate-100 resize-none outline-none leading-6 font-mono whitespace-pre overflow-y-auto border-none"></textarea>
+                </div>
+
+                <!-- Input Footer / Validation Status -->
+                <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-darkborder text-xs flex items-center justify-between text-slate-500 dark:text-slate-400">
+                    <div class="flex items-center space-x-2 truncate">
+                        <span id="statusIndicator" class="inline-block w-2 h-2 rounded-full bg-slate-400"></span>
+                        <span id="statusText" class="truncate">Ready for input validation</span>
+                    </div>
+                    <div class="text-right whitespace-nowrap">
+                        <span class="text-slate-400">Auto-case conversion enabled</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Output Window -->
+            <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-2xl shadow-sm flex flex-col h-[580px] overflow-hidden">
+                <!-- Panel Header with Mandatory Copy Button at top -->
+                <div class="px-5 py-3 border-b border-slate-200 dark:border-darkborder bg-slate-50/50 dark:bg-slate-800/50 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-square-poll-vertical text-emerald-500"></i>
+                        <span class="font-semibold text-sm text-slate-800 dark:text-slate-200">Output Window</span>
+                    </div>
+
+                    <!-- MANDATORY COPY BUTTON AT TOP OF OUTPUT WINDOW -->
+                    <div class="flex items-center space-x-2">
+                        <button id="copyBtn" onclick="copyOutputToClipboard()" class="inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all shadow-sm">
+                            <i class="fa-solid fa-copy mr-1.5"></i> Copy Output
+                        </button>
+                        
+                        <!-- View Toggle -->
+                        <div class="bg-slate-200 dark:bg-slate-700 p-0.5 rounded-lg flex text-xs">
+                            <button id="viewRawBtn" onclick="switchOutputView('raw')" class="px-2.5 py-1 rounded-md font-medium text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 shadow-sm transition-all">Text</button>
+                            <button id="viewTableBtn" onclick="switchOutputView('table')" class="px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-all">Cards</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar during batch run -->
+                <div id="progressBarContainer" class="hidden w-full bg-slate-100 dark:bg-slate-800 h-1.5 overflow-hidden">
+                    <div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-200"></div>
+                </div>
+
+                <!-- Raw Text Display View -->
+                <div id="rawOutputView" class="flex-1 p-4 bg-slate-900 text-slate-100 font-mono text-xs sm:text-sm overflow-auto whitespace-nowrap leading-6 select-text">
+                    <div id="outputPlaceholder" class="h-full flex flex-col items-center justify-center text-slate-500 text-center p-6 space-y-3">
+                        <i class="fa-solid fa-terminal text-3xl text-slate-600"></i>
+                        <p class="text-xs sm:text-sm">Processed output and matched API URLs will appear here.</p>
+                        <p class="text-xs text-slate-600">Click "Process API Endpoints" above to begin fetching.</p>
+                    </div>
+                    <code id="outputTextCode" class="hidden"></code>
+                </div>
+
+                <!-- Visual Interactive Card/Table View (Hidden by default) -->
+                <div id="tableOutputView" class="hidden flex-1 p-4 bg-slate-50 dark:bg-slate-900/50 overflow-y-auto space-y-3">
+                    <div id="cardsContainer" class="space-y-3">
+                        <!-- Dynamic Cards will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Output Footer -->
+                <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-darkborder text-xs flex items-center justify-between text-slate-500 dark:text-slate-400">
+                    <div class="flex items-center space-x-2">
+                        <span id="outputStats" class="font-mono">0 results</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="downloadOutputText()" class="hover:text-blue-500 transition-colors flex items-center gap-1">
+                            <i class="fa-solid fa-download"></i> Download .txt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Results Table Section -->
+        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-2xl shadow-sm p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-darkborder pb-3">
+                <div>
+                    <h2 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-blue-500"></i>
+                        Batch Processing Breakdown
+                    </h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Detailed overview of stop IDs, matched directions, and live verification status.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="matchedBadge" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 font-medium">0 Matched</span>
+                    <span id="errorBadge" class="text-xs px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 font-medium">0 Issues</span>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                <table class="w-full text-left text-xs sm:text-sm">
+                    <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                            <th class="p-3">Company</th>
+                            <th class="p-3">Route</th>
+                            <th class="p-3">Input Dir / Stop</th>
+                            <th class="p-3">Matched Stop & Details</th>
+                            <th class="p-3">Generated ETA API URL</th>
+                            <th class="p-3 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody" class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-slate-400 dark:text-slate-500">
+                                No records processed yet. Click "Process API Endpoints" to execute queries against HK Transport APIs.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal for Testing Live ETA API -->
+    <div id="etaModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-darkborder flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+                <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <h3 id="modalTitle" class="font-bold text-base text-slate-900 dark:text-white">Live ETA Inspector</h3>
+                </div>
+                <button onclick="closeEtaModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <div class="p-5 flex-1 overflow-y-auto space-y-4">
+                <div id="modalUrlBox" class="p-3 bg-slate-100 dark:bg-slate-900 rounded-xl font-mono text-xs break-all text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <span id="modalUrlText">https://...</span>
+                    <button onclick="copyModalUrl()" class="text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 text-xs shrink-0 px-2 py-1 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">Copy Link</button>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold text-xs uppercase tracking-wider text-slate-500 mb-2">Parsed Live Arrivals</h4>
+                    <div id="modalEtaList" class="space-y-2">
+                        <div class="p-4 text-center text-slate-400 text-xs">Fetching live ETA from Government server...</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold text-xs uppercase tracking-wider text-slate-500 mb-2">Raw API JSON Payload</h4>
+                    <pre id="modalJsonPayload" class="p-3 bg-slate-950 text-emerald-400 rounded-xl font-mono text-xs overflow-x-auto max-h-48 border border-slate-800">{}</pre>
+                </div>
+            </div>
+            <!-- Modal Footer -->
+            <div class="px-5 py-3 border-t border-slate-200 dark:border-darkborder bg-slate-50 dark:bg-slate-800/50 flex justify-end">
+                <button onclick="closeEtaModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-xl text-xs font-semibold transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-2xl text-xs font-semibold flex items-center space-x-2 transform translate-y-10 opacity-0 transition-all duration-300 pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 dark:text-emerald-600"></i>
+        <span id="toastMessage">Notification message</span>
+    </div>
+
+    <script>
+        // Sample input provided in prompt user context
+        const DEFAULT_SAMPLE_DATA = `KMB 234A 荃灣 海韻花園
+KMB 234B 荃灣 海韻花園
+KMB 234C 觀塘 海韻花園
+KMB 234D 觀塘 海韻花園
+KMB 261B 九龍站 海韻花園
+KMB 48P 火炭 海韻花園
+KMB 52P 旺角 海韻花園
+KMB 53 荃灣 海韻花園
+GMB 96C 荃灣 碧堤半島
+KMB 52X 旺角 海韻花園
+CTB 952 銅鑼灣 海韻花園
+KMB A38 機場 深井深慈街
+GMB 308M 青衣站 海韻花園
+KMB 52X 屯門 碧堤半島
+KMB 53 元朗 碧堤半島
+CTB 952 屯門 碧堤半島`;
+
+        // Application State
+        let isProcessing = false;
+        let processedResults = [];
+        let rawOutputText = "";
+        let kmbStopsCache = null; // Cache KMB stop list for high performance
+        let ctbRoutesCache = null; // Cache CTB routes
+
+        // Initial setup on window load
+        window.onload = function() {
+            // Check system color scheme preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            // Auto load sample data into editor
+            loadSampleData();
+        };
+
+        // Dark mode toggler
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        // Load sample data into editor
+        function loadSampleData() {
+            const textarea = document.getElementById('inputTextarea');
+            textarea.value = DEFAULT_SAMPLE_DATA;
+            handleInputTextChange();
+            showToast("Sample route data loaded.");
+        }
+
+        function clearInput() {
+            const textarea = document.getElementById('inputTextarea');
+            textarea.value = '';
+            handleInputTextChange();
+            resetOutput();
+            showToast("Input cleared.");
+        }
+
+        function syncScroll() {
+            const textarea = document.getElementById('inputTextarea');
+            const lineNumbers = document.getElementById('lineNumbers');
+            lineNumbers.scrollTop = textarea.scrollTop;
+        }
+
+        // Real-time input handling & validation feedback
+        function handleInputTextChange() {
+            const textarea = document.getElementById('inputTextarea');
+            const lines = textarea.value.split('\n');
+            
+            // Update line numbers
+            const lineNumbersDiv = document.getElementById('lineNumbers');
+            lineNumbersDiv.innerHTML = lines.map((_, idx) => idx + 1).join('<br>');
+            
+            // Update counters
+            document.getElementById('lineCounter').innerText = `${lines.length} lines`;
+            
+            // Real-time quick validation
+            let validCount = 0;
+            let invalidCount = 0;
+            lines.forEach(line => {
+                if (line.trim().length === 0) return;
+                const v = validateLine(line);
+                if (v.isValid) validCount++;
+                else invalidCount++;
+            });
+
+            const statusText = document.getElementById('statusText');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const validationSummary = document.getElementById('validationSummary');
+
+            if (lines.length === 1 && lines[0].trim() === '') {
+                statusText.innerText = "Ready for input validation";
+                statusIndicator.className = "inline-block w-2 h-2 rounded-full bg-slate-400";
+                validationSummary.innerText = "Validation: Empty";
+            } else if (invalidCount === 0) {
+                statusText.innerText = `All ${validCount} valid input line(s) formatted properly.`;
+                statusIndicator.className = "inline-block w-2 h-2 rounded-full bg-emerald-500";
+                validationSummary.innerText = `Validation: ${validCount} Passed`;
+            } else {
+                statusText.innerText = `${validCount} valid line(s), ${invalidCount} line(s) have format errors.`;
+                statusIndicator.className = "inline-block w-2 h-2 rounded-full bg-amber-500";
+                validationSummary.innerText = `Validation: ${invalidCount} Warnings`;
+            }
+        }
+
+        // Strict Validation function following user specification
+        // 1. Bus_company_id must be KMB CTB or GMB.
+        // 2. Followed by 3 alphanumeric/Chinese words separated by space. Special characters not permitted.
+        // 3. Lowercase converted to uppercase.
+        function validateLine(lineText) {
+            const trimmed = lineText.trim();
+            if (!trimmed) return { isValid: false, reason: "Empty line" };
+
+            // Split line by one or more whitespace spaces/tabs
+            const parts = trimmed.split(/\s+/);
+            if (parts.length < 4) {
+                return { 
+                    isValid: false, 
+                    reason: "Requires 4 space-separated values: [company_id] [route] [direction] [stop_name]" 
+                };
+            }
+
+            // Extract parts
+            let co = parts[0].toUpperCase();
+            let route = parts[1].toUpperCase();
+            let dir = parts[2].toUpperCase();
+            // In case stop_name contains spaces, join remainder, or take 4th item
+            let stop = parts.slice(3).join(" ").toUpperCase();
+
+            // 1. Validate Bus Company ID
+            if (!["KMB", "CTB", "GMB"].includes(co)) {
+                return { 
+                    isValid: false, 
+                    reason: `Invalid company "${co}". Must be KMB, CTB, or GMB.` 
+                };
+            }
+
+            // 2. Check for disallowed special characters in route, direction, and stop_name
+            // Permitted: Letters A-Z, Digits 0-9, CJK Chinese Characters (\u4e00-\u9fff, \u3400-\u4dbf, fullwidth)
+            const permittedRegex = /^[A-Z0-9\u4e00-\u9fa5\u3400-\u4dbf\uff00-\uffef\s]+$/;
+
+            if (!permittedRegex.test(route)) {
+                return { isValid: false, reason: `Route "${route}" contains special characters.` };
+            }
+            if (!permittedRegex.test(dir)) {
+                return { isValid: false, reason: `Direction "${dir}" contains special characters.` };
+            }
+            if (!permittedRegex.test(stop)) {
+                return { isValid: false, reason: `Stop name "${stop}" contains special characters.` };
+            }
+
+            return {
+                isValid: true,
+                co,
+                route,
+                dir,
+                stop,
+                formattedInput: `${co} ${route} ${dir} ${stop}`
+            };
+        }
+
+        // Main Execution Controller
+        async function startBatchProcessing() {
+            const textarea = document.getElementById('inputTextarea');
+            const rawLines = textarea.value.split('\n');
+            const validLines = [];
+
+            rawLines.forEach((line, index) => {
+                if (line.trim() === '') return;
+                const v = validateLine(line);
+                validLines.push({ lineIndex: index + 1, rawText: line, validation: v });
+            });
+
+            if (validLines.length === 0) {
+                showToast("Please enter valid route lines before processing.", true);
+                return;
+            }
+
+            // UI Progress state
+            isProcessing = true;
+            document.getElementById('processBtn').disabled = true;
+            document.getElementById('processBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            document.getElementById('progressBarContainer').classList.remove('hidden');
+
+            processedResults = [];
+            rawOutputText = "";
+
+            let total = validLines.length;
+            let matchedCount = 0;
+            let issueCount = 0;
+
+            // Pre-load master KMB stop list if KMB routes exist for fast lookup
+            const hasKmb = validLines.some(item => item.validation.isValid && item.validation.co === 'KMB');
+            if (hasKmb && !kmbStopsCache) {
+                updateProgress(0, total, "Pre-fetching KMB stop directory from HK Open Data...");
+                await preloadKmbStops();
+            }
+
+            for (let i = 0; i < total; i++) {
+                const item = validLines[i];
+                updateProgress(i + 1, total, `Processing line ${i + 1}/${total}: ${item.validation.formattedInput || item.rawText}`);
+
+                if (!item.validation.isValid) {
+                    const errorRes = {
+                        inputLine: item.rawText,
+                        formattedInput: item.rawText.toUpperCase(),
+                        co: 'UNKNOWN',
+                        route: '-',
+                        dir: '-',
+                        stop: '-',
+                        matchedStopName: 'N/A',
+                        stopId: 'N/A',
+                        etaUrl: 'Invalid Format',
+                        status: 'Error',
+                        message: item.validation.reason
+                    };
+                    processedResults.push(errorRes);
+                    issueCount++;
+                } else {
+                    // Query specific operator API
+                    const res = await processSingleRoute(item.validation);
+                    processedResults.push(res);
+                    if (res.status === 'Matched') matchedCount++;
+                    else issueCount++;
+                }
+
+                // Render progressive output after each line
+                renderOutputViews();
+            }
+
+            // Finalize UI
+            isProcessing = false;
+            document.getElementById('processBtn').disabled = false;
+            document.getElementById('processBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('progressBarContainer').classList.add('hidden');
+            
+            document.getElementById('matchedBadge').innerText = `${matchedCount} Matched`;
+            document.getElementById('errorBadge').innerText = `${issueCount} Issues`;
+
+            showToast(`Batch completed! ${matchedCount} ETA endpoints generated.`);
+        }
+
+        function updateProgress(current, total, label) {
+            const percent = Math.round((current / total) * 100);
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('statusText').innerText = label;
+        }
+
+        // Cache KMB stop list
+        async function preloadKmbStops() {
+            try {
+                const response = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop');
+                const json = await response.json();
+                if (json && json.data) {
+                    kmbStopsCache = {};
+                    json.data.forEach(s => {
+                        kmbStopsCache[s.stop] = s;
+                    });
+                }
+            } catch (e) {
+                console.warn("KMB stops pre-fetch warning:", e);
+            }
+        }
+
+        // PROCESS INDIVIDUAL BUS ROUTES WITH OPEN DATA APIs
+        async function processSingleRoute(val) {
+            const { co, route, dir, stop, formattedInput } = val;
+
+            try {
+                if (co === 'KMB') {
+                    return await processKmbRoute(formattedInput, route, dir, stop);
+                } else if (co === 'CTB') {
+                    return await processCtbRoute(formattedInput, route, dir, stop);
+                } else if (co === 'GMB') {
+                    return await processGmbRoute(formattedInput, route, dir, stop);
+                }
+            } catch (err) {
+                console.error("Processing error for line:", formattedInput, err);
+                return {
+                    inputLine: formattedInput,
+                    formattedInput,
+                    co, route, dir, stop,
+                    matchedStopName: 'Fetch Exception',
+                    stopId: 'N/A',
+                    etaUrl: `API Query Error: ${err.message}`,
+                    status: 'Error',
+                    message: err.message
+                };
+            }
+        }
+
+        // 1. KMB API Matcher
+        async function processKmbRoute(inputLine, route, dir, stop) {
+            // Fetch KMB route-stop sequence for outbound and inbound
+            const directionsToTry = ['outbound', 'inbound'];
+            let matchedStop = null;
+            let matchedDirName = "";
+            let matchedServiceType = "1";
+
+            for (let boundStr of directionsToTry) {
+                // Fetch route info to check destination
+                try {
+                    const routeRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/${route}/${boundStr}/1`);
+                    const routeJson = await routeRes.json();
+
+                    if (routeJson && routeJson.data) {
+                        const rData = Array.isArray(routeJson.data) ? routeJson.data[0] : routeJson.data;
+                        if (rData) {
+                            const destTc = rData.dest_tc || "";
+                            const origTc = rData.orig_tc || "";
+
+                            // Check if direction begins with input dir (e.g. "荃灣" matches "荃灣西站")
+                            if (destTc.startsWith(dir) || origTc.startsWith(dir) || dir.startsWith(destTc.substring(0, 2))) {
+                                matchedDirName = destTc;
+                                
+                                // Fetch route-stop list
+                                const stopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${boundStr}/1`);
+                                const stopsJson = await stopsRes.json();
+
+                                if (stopsJson && stopsJson.data && stopsJson.data.length > 0) {
+                                    for (let stopItem of stopsJson.data) {
+                                        let stopDetail = kmbStopsCache ? kmbStopsCache[stopItem.stop] : null;
+                                        if (!stopDetail) {
+                                            const sRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${stopItem.stop}`);
+                                            const sJson = await sRes.json();
+                                            stopDetail = sJson ? sJson.data : null;
+                                        }
+
+                                        if (stopDetail && stopDetail.name_tc) {
+                                            // Check if stop name begins with same characters as input stop_name
+                                            if (stopDetail.name_tc.startsWith(stop) || stop.startsWith(stopDetail.name_tc.substring(0, 2))) {
+                                                matchedStop = {
+                                                    stopId: stopItem.stop,
+                                                    nameTc: stopDetail.name_tc,
+                                                    bound: boundStr,
+                                                    seq: stopItem.seq
+                                                };
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`KMB query check failed for ${route} ${boundStr}:`, e);
+                }
+
+                if (matchedStop) break;
+            }
+
+            if (matchedStop) {
+                const etaUrl = `https://data.etabus.gov.hk/v1/transport/kmb/eta/${matchedStop.stopId}/${route}/${matchedServiceType}`;
+                return {
+                    inputLine,
+                    formattedInput: inputLine,
+                    co: 'KMB',
+                    route,
+                    dir,
+                    stop,
+                    matchedStopName: matchedStop.nameTc,
+                    stopId: matchedStop.stopId,
+                    etaUrl: etaUrl,
+                    status: 'Matched',
+                    message: `Matched stop "${matchedStop.nameTc}" (${matchedStop.stopId})`
+                };
+            }
+
+            // Fallback if stop name matching didn't match specific API record
+            return {
+                inputLine,
+                formattedInput: inputLine,
+                co: 'KMB',
+                route, dir, stop,
+                matchedStopName: 'Not Found in Route',
+                stopId: 'N/A',
+                etaUrl: `https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/outbound/1`,
+                status: 'Error',
+                message: `Could not match stop "${stop}" for direction "${dir}"`
+            };
+        }
+
+        // 2. CTB (Citybus) API Matcher
+        async function processCtbRoute(inputLine, route, dir, stop) {
+            const directions = ['outbound', 'inbound'];
+            let matchedStop = null;
+
+            for (let d of directions) {
+                try {
+                    const stopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/ctb/${route}/${d}`);
+                    const stopsJson = await stopsRes.json();
+
+                    if (stopsJson && stopsJson.data && stopsJson.data.length > 0) {
+                        for (let sItem of stopsJson.data) {
+                            // Query CTB stop details
+                            const sDetailRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${sItem.stop}`);
+                            const sDetailJson = await sDetailRes.json();
+
+                            if (sDetailJson && sDetailJson.data) {
+                                const nameTc = sDetailJson.data.name_tc || "";
+                                // Check if stop name begins with input stop name
+                                if (nameTc.startsWith(stop) || stop.startsWith(nameTc.substring(0, 2))) {
+                                    matchedStop = {
+                                        stopId: sItem.stop,
+                                        nameTc: nameTc,
+                                        dir: d
+                                    };
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`CTB route check warning:`, e);
+                }
+
+                if (matchedStop) break;
+            }
+
+            if (matchedStop) {
+                const etaUrl = `https://rt.data.gov.hk/v2/transport/citybus/eta/ctb/${matchedStop.stopId}/${route}`;
+                return {
+                    inputLine,
+                    formattedInput: inputLine,
+                    co: 'CTB',
+                    route,
+                    dir,
+                    stop,
+                    matchedStopName: matchedStop.nameTc,
+                    stopId: matchedStop.stopId,
+                    etaUrl: etaUrl,
+                    status: 'Matched',
+                    message: `Matched stop "${matchedStop.nameTc}" (${matchedStop.stopId})`
+                };
+            }
+
+            return {
+                inputLine,
+                formattedInput: inputLine,
+                co: 'CTB',
+                route, dir, stop,
+                matchedStopName: 'Not Found',
+                stopId: 'N/A',
+                etaUrl: `https://rt.data.gov.hk/v2/transport/citybus/route-stop/ctb/${route}/outbound`,
+                status: 'Error',
+                message: `Could not match CTB stop "${stop}"`
+            };
+        }
+
+        // 3. GMB (Green Minibus) API Matcher
+        async function processGmbRoute(inputLine, route, dir, stop) {
+            const regions = ['NT', 'KLN', 'HKI'];
+            let matchedRouteData = null;
+            let matchedRegion = null;
+
+            // Search GMB regions for route number
+            for (let reg of regions) {
+                try {
+                    const rRes = await fetch(`https://data.etagmb.gov.hk/route/${reg}/${route}`);
+                    const rJson = await rRes.json();
+
+                    if (rJson && rJson.data && rJson.data.length > 0) {
+                        matchedRouteData = rJson.data[0];
+                        matchedRegion = reg;
+                        break;
+                    }
+                } catch (e) {
+                    // Region skip
+                }
+            }
+
+            if (matchedRouteData && matchedRouteData.directions) {
+                // Find matching direction route_seq
+                let matchedSeq = 1;
+                for (let dInfo of matchedRouteData.directions) {
+                    const destTc = dInfo.dest_tc || "";
+                    if (destTc.startsWith(dir) || dir.startsWith(destTc.substring(0, 2))) {
+                        matchedSeq = dInfo.route_seq;
+                        break;
+                    }
+                }
+
+                // Query route stops
+                try {
+                    const stopsRes = await fetch(`https://data.etagmb.gov.hk/route-stop/${matchedRouteData.route_id}/${matchedSeq}`);
+                    const stopsJson = await stopsRes.json();
+
+                    if (stopsJson && stopsJson.data && stopsJson.data.route_stops) {
+                        for (let sItem of stopsJson.data.route_stops) {
+                            const nameTc = sItem.name_tc || "";
+                            if (nameTc.startsWith(stop) || stop.startsWith(nameTc.substring(0, 2))) {
+                                const etaUrl = `https://data.etagmb.gov.hk/eta/route-stop/${matchedRouteData.route_id}/${matchedSeq}/${sItem.stop_seq}`;
+                                return {
+                                    inputLine,
+                                    formattedInput: inputLine,
+                                    co: 'GMB',
+                                    route,
+                                    dir,
+                                    stop,
+                                    matchedStopName: nameTc,
+                                    stopId: `${matchedRouteData.route_id}-${sItem.stop_seq}`,
+                                    etaUrl: etaUrl,
+                                    status: 'Matched',
+                                    message: `Matched GMB stop "${nameTc}"`
+                                };
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn("GMB route-stop fetch failed:", e);
+                }
+            }
+
+            return {
+                inputLine,
+                formattedInput: inputLine,
+                co: 'GMB',
+                route, dir, stop,
+                matchedStopName: 'Not Found',
+                stopId: 'N/A',
+                etaUrl: `https://data.etagmb.gov.hk/route/NT/${route}`,
+                status: 'Error',
+                message: `Could not match GMB route/stop "${route} - ${stop}"`
+            };
+        }
+
+        // RENDER OUTPUT VIEWS
+        function renderOutputViews() {
+            // Build plain text output as strictly requested: User input followed by API URL on the same line
+            const textLines = [];
+            processedResults.forEach(r => {
+                // Formatting requirement: "input_data  API_URL" all on one line
+                textLines.push(`${r.formattedInput}  ${r.etaUrl}`);
+            });
+
+            rawOutputText = textLines.join('\n').trim();
+
+            // Update Text View
+            const codeElem = document.getElementById('outputTextCode');
+            const placeholder = document.getElementById('outputPlaceholder');
+
+            if (rawOutputText.length > 0) {
+                placeholder.classList.add('hidden');
+                codeElem.classList.remove('hidden');
+                codeElem.innerText = rawOutputText;
+            } else {
+                placeholder.classList.remove('hidden');
+                codeElem.classList.add('hidden');
+            }
+
+            // Update Stats Footer
+            document.getElementById('outputStats').innerText = `${processedResults.length} records processed`;
+
+            // Render Interactive Cards View
+            renderCardsView();
+
+            // Render Results Breakdown Table
+            renderBreakdownTable();
+        }
+
+        function switchOutputView(viewMode) {
+            const rawView = document.getElementById('rawOutputView');
+            const tableView = document.getElementById('tableOutputView');
+            const btnRaw = document.getElementById('viewRawBtn');
+            const btnTable = document.getElementById('viewTableBtn');
+
+            if (viewMode === 'raw') {
+                rawView.classList.remove('hidden');
+                tableView.classList.add('hidden');
+                btnRaw.className = "px-2.5 py-1 rounded-md font-medium text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 shadow-sm transition-all";
+                btnTable.className = "px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-all";
+            } else {
+                rawView.classList.add('hidden');
+                tableView.classList.remove('hidden');
+                btnTable.className = "px-2.5 py-1 rounded-md font-medium text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 shadow-sm transition-all";
+                btnRaw.className = "px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-all";
+            }
+        }
+
+        function renderCardsView() {
+            const container = document.getElementById('cardsContainer');
+            if (processedResults.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">No records available.</div>`;
+                return;
+            }
+
+            container.innerHTML = processedResults.map(r => {
+                const coBadgeClass = r.co === 'KMB' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' :
+                                     r.co === 'CTB' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300' :
+                                     r.co === 'GMB' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' :
+                                     'bg-slate-100 text-slate-700';
+
+                return `
+                <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-xl p-3.5 shadow-sm space-y-2 text-xs">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-0.5 rounded-md font-bold font-mono ${coBadgeClass}">${r.co}</span>
+                            <span class="font-bold text-slate-900 dark:text-white font-mono text-sm">${r.route}</span>
+                            <span class="text-slate-400">→</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-300">${r.dir}</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full font-medium ${r.status === 'Matched' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'}">
+                            ${r.status}
+                        </span>
+                    </div>
+                    <div class="text-slate-600 dark:text-slate-400">
+                        Input Stop: <span class="font-medium text-slate-800 dark:text-slate-200">${r.stop}</span> | Matched API Stop: <span class="font-medium text-blue-600 dark:text-blue-400">${r.matchedStopName}</span>
+                    </div>
+                    <div class="p-2 bg-slate-100 dark:bg-slate-900 rounded-lg font-mono text-slate-600 dark:text-slate-300 text-[11px] break-all flex items-center justify-between gap-2">
+                        <span class="truncate">${r.etaUrl}</span>
+                        <button onclick="copySingleUrl('${r.etaUrl}')" class="shrink-0 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 p-1" title="Copy URL">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function renderBreakdownTable() {
+            const tbody = document.getElementById('resultsTableBody');
+            if (processedResults.length === 0) {
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-8 text-center text-slate-400 dark:text-slate-500">
+                        No records processed yet. Click "Process API Endpoints" to execute queries against HK Transport APIs.
+                    </td>
+                </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = processedResults.map((r, idx) => {
+                const coBadgeClass = r.co === 'KMB' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' :
+                                     r.co === 'CTB' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300' :
+                                     r.co === 'GMB' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' :
+                                     'bg-slate-100 text-slate-700';
+
+                return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded font-bold font-mono text-xs ${coBadgeClass}">${r.co}</span>
+                    </td>
+                    <td class="p-3 font-mono font-bold text-slate-900 dark:text-white">${r.route}</td>
+                    <td class="p-3 text-slate-600 dark:text-slate-300">
+                        <div><span class="text-slate-400 text-xs">Dir:</span> ${r.dir}</div>
+                        <div><span class="text-slate-400 text-xs">Stop:</span> ${r.stop}</div>
+                    </td>
+                    <td class="p-3">
+                        <div class="font-semibold text-slate-800 dark:text-slate-100">${r.matchedStopName}</div>
+                        <div class="text-xs text-slate-400 font-mono">ID: ${r.stopId}</div>
+                    </td>
+                    <td class="p-3 font-mono text-xs max-w-xs truncate text-blue-600 dark:text-blue-400">
+                        <a href="${r.etaUrl}" target="_blank" class="hover:underline">${r.etaUrl}</a>
+                    </td>
+                    <td class="p-3 text-center">
+                        ${r.status === 'Matched' ? `
+                            <button onclick="inspectEtaModal('${r.etaUrl}', '${r.co}', '${r.route}', '${r.matchedStopName}')" class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 hover:bg-blue-100 text-xs font-semibold transition-colors">
+                                <i class="fa-solid fa-satellite-dish mr-1"></i> Test API
+                            </button>
+                        ` : `
+                            <span class="text-xs text-slate-400">N/A</span>
+                        `}
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        // MANDATORY COPY OUTPUT TO CLIPBOARD FUNCTION
+        function copyOutputToClipboard() {
+            if (!rawOutputText || rawOutputText.trim().length === 0) {
+                showToast("No output text to copy.", true);
+                return;
+            }
+
+            // Implement robust clipboard copy with execCommand fallback for iframe sandboxes
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(rawOutputText).then(() => {
+                    showToast("Output text copied to clipboard!");
+                }).catch(() => {
+                    fallbackCopy(rawOutputText);
+                });
+            } else {
+                fallbackCopy(rawOutputText);
+            }
+        }
+
+        function copySingleUrl(url) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(() => showToast("URL copied!"));
+            } else {
+                fallbackCopy(url);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) showToast("Output text copied to clipboard!");
+                else showToast("Copy failed. Please select text manually.", true);
+            } catch (err) {
+                showToast("Copy error.", true);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function downloadOutputText() {
+            if (!rawOutputText) {
+                showToast("No output to download.", true);
+                return;
+            }
+            const blob = new Blob([rawOutputText], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `HK_Bus_ETA_Endpoints_${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Downloaded text file.");
+        }
+
+        // LIVE ETA MODAL INSPECTOR
+        async function inspectEtaModal(url, co, route, stopName) {
+            const modal = document.getElementById('etaModal');
+            document.getElementById('modalTitle').innerText = `${co} ${route} - ${stopName}`;
+            document.getElementById('modalUrlText').innerText = url;
+            document.getElementById('modalEtaList').innerHTML = `<div class="p-4 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Fetching live ETA data...</div>`;
+            document.getElementById('modalJsonPayload').innerText = "Loading...";
+
+            modal.classList.remove('hidden');
+
+            try {
+                const res = await fetch(url);
+                const json = await res.json();
+
+                document.getElementById('modalJsonPayload').innerText = JSON.stringify(json, null, 2);
+
+                // Parse arrival times
+                let etaItems = [];
+                if (json && json.data) {
+                    const list = Array.isArray(json.data) ? json.data : [json.data];
+                    list.forEach(item => {
+                        // ONLY add items that have a non-null, valid ETA
+                       if (item.timestamp) {
+                            const etaTime = new Date(item.timestamp.slice(0, 19));
+                            const now = new Date();
+                            const diffMins = Math.round((etaTime - now) / 60000);
+                            
+                            // Only include if it's a valid future/near-future time
+                            etaItems.push({
+                                dest: item.dest_tc || item.dest_en || route,
+                                timeStr: etaTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                mins: diffMins > 0 ? `${diffMins} mins` : 'Arriving',
+                                rmk: item.rmk_tc || item.rmk_en || ''
+                            });
+                        }
+                        if (item.eta) {
+                            const etaTime = new Date(item.eta);
+                            const now = new Date();
+                            const diffMins = Math.round((etaTime - now) / 60000);
+                            
+                            // Only include if it's a valid future/near-future time
+                            etaItems.push({
+                                dest: item.dest_tc || item.dest_en || route,
+                                timeStr: etaTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                mins: diffMins > 0 ? `${diffMins} mins` : 'Arriving',
+                                rmk: item.rmk_tc || item.rmk_en || ''
+                            });
+                        }
+                    });
+                }
+
+                if (etaItems.length > 0) {
+                    document.getElementById('modalEtaList').innerHTML = etaItems.map(item => `
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-between border border-slate-200 dark:border-slate-700">
+                            <div>
+                                <div class="font-semibold text-xs text-slate-800 dark:text-slate-200">To ${item.dest}</div>
+                                <div class="text-[11px] text-slate-500">${item.rmk ? item.rmk + ' • ' : ''}Clock: ${item.timeStr}</div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-xs">
+                                ${item.mins}
+                            </span>
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('modalEtaList').innerHTML = `<div class="p-4 text-center text-slate-500 text-xs">No more buses</div>`;
+                }
+
+            } catch (err) {
+                document.getElementById('modalEtaList').innerHTML = `<div class="p-4 text-center text-rose-500 text-xs">Failed to fetch live API: ${err.message}</div>`;
+                document.getElementById('modalJsonPayload').innerText = `Error: ${err.message}`;
+            }
+        }
+
+        function copyModalUrl() {
+            const url = document.getElementById('modalUrlText').innerText;
+            copySingleUrl(url);
+        }
+
+        function closeEtaModal() {
+            document.getElementById('etaModal').classList.add('hidden');
+        }
+
+        // Toast Helper
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+            if (isError) {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 dark:text-emerald-600";
+            }
+
+            toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
