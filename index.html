@@ -1070,6 +1070,17 @@ CTB 952 屯門 碧堤半島`;
                                 rmk: item.rmk_tc || item.rmk_en || ''
                             });
                         }
+                     if (item.diff) {
+                            const diffMins = item.diff;   
+                            // Only include if it's a valid future/near-future time
+                            etaItems.push({
+                                dest: item.dest_tc || item.dest_en || route,
+                                timeStr: etaTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                mins: diffMins > 0 ? `${diffMins} mins` : 'Arriving',
+                                rmk: item.remarks_tc || item.remarks_en || ''
+                            });
+                        }
+
                     });
                 }
 
