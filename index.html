@@ -67,8 +67,8 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-lg sm:text-xl text-slate-900 dark:text-white flex items-center gap-2">
-                        HK Bus ETA API Generator
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-mono font-medium">v2.1 Open Data</span>
+                        HK Bus ETA API Generator v1.2
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-mono font-medium">Open Data</span>
                     </h1>
                     <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Match KMB, CTB & GMB stops and retrieve official ETA API endpoints</p>
                 </div>
@@ -1057,10 +1057,8 @@ CTB 952 屯門 碧堤半島`;
                     const list = Array.isArray(json.data) ? json.data : [json.data];
                     list.forEach(item => {
                         // ONLY add items that have a non-null, valid ETA
-                        if (item.timestamp) {
-                            const etaTime = new Date(item.timestamp);
-                            const now = new Date();
-                            const diffMins = Math.round((etaTime - now) / 60000);
+                        if (item.diff) {
+                            const diffMins = item.diff;
                             
                             // Only include if it's a valid future/near-future time
                             etaItems.push({
